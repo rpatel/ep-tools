@@ -21,17 +21,20 @@
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"
             integrity="sha256-/GKyJ0BQJD8c8UYgf7ziBrs/QgcikS7Fv/SaArgBcEI=" crossorigin="anonymous"></script>
 
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+
     <script src="js/codon-tables.js"></script>
-    <script src="js/ets-calculator.js"></script>
+    <script src="js/init.js"></script>
+    <script src="js/calculator.js"></script>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-            integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
 </head>
 
 <body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Time Span Calculator</a>
+    <a class="navbar-brand" href="#">Expected Mutations Calculator</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -49,101 +52,122 @@
     <div class="card">
         <div class="card-header">
             <h6 class="mb-0">
-                Mutation Model
+                Mutation Parameters
             </h6>
         </div>
-        <div class="card-body collapse" id="mutationModelCardBody">
-            <div class="form-group row">
-                <label for="perSiteMutationRateInput" class="col-form-label col-sm-3">Point Mutation Rate</label>
-                <div class="input-group col-sm-9 px-0">
-                    <input type="text" class="form-control" id="perSiteMutationRateInput"
-                           placeholder="e.g., 0.00314, 2.5e-9">
-                    <select class="form-control" id="mutationRateUnitSelect" style="max-width: 250px;">
-                        <option value="perYear">mutations / bp/ year</option>
-                        <option value="perGeneration">mutations / bp/ generation
-                        </option>
-                    </select>
+
+        <div class="list-group list-group-flush">
+            <div class="list-group-item collapse" id="mutationModelCardBody">
+
+                <div class="form-group row">
+                    <label class="col-form-label col-sm-3">Desired number of mutations</label>
+                    <input type="text" class="form-control col-sm-9" id="requiredMutationsText">
+                </div>
+
+                <div class="form-group row">
+                    <label for="perSiteMutationRateText" class="col-form-label col-sm-3">Point Mutation Rate</label>
+                    <div class="input-group col-sm-9 px-0">
+                        <input type="text" class="form-control" id="perSiteMutationRateText"
+                               placeholder="e.g., 0.00314, 2.5e-9">
+                        <select class="form-control" id="mutationRateUnitSelect" style="max-width: 250px;">
+                            <option value="perYear">mutations / bp / year</option>
+                            <option value="perGeneration">mutations / bp / generation
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row collapse" id="generationsPerYearCollapse">
+                    <label class="col-form-label col-sm-3">Generations per year</label>
+                    <input type="text" class="form-control col-sm-9" id="generationsPerYearText">
+                </div>
+
+                <div class="form-group row">
+                    <label for="codonModelSelect" class="col-form-label col-sm-3">Codon Table</label>
+                    <select class="form-control col-sm-9" id="codonModelSelect"></select>
+                </div>
+
+                <div class="row table-responsive-sm mx-0 px-0">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>
+                                <button class="btn btn-outline-warning btn-sm" data-toggle="collapse"
+                                        data-target=".advanced-codon-position-row" id="advancedCodonButton">
+                            <span data-toggle="tooltip"
+                                  title="Customize per-position mutation probabilities">Advanced</span>
+                                </button>
+                            </th>
+                            <th scope="col">Codon Position 1</th>
+                            <th scope="col">Codon Position 2</th>
+                            <th scope="col">Codon Position 3</th>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th scope="row" class="align-middle">
+                                Fraction of Expected Mutations <br>
+                                <small id="mutationTypesText"></small>
+                            </th>
+                            <td><input type="text" class="form-control codon-rate-total" size="5" readonly></td>
+                            <td><input type="text" class="form-control codon-rate-total" size="5" readonly></td>
+                            <td><input type="text" class="form-control codon-rate-total" size="5" readonly></td>
+                        </tr>
+                        </tbody>
+                        <tbody class="collapse advanced-codon-position-row">
+                        <tr>
+                            <td class="align-middle">
+                                <div class="form-check form-check-inline" data-toggle="tooltip"
+                                     title="Include in calculation?">
+                                    <input class="form-check-input mutation-type-check" type="checkbox"
+                                           id="missenseTypeCheck" value="Missense">
+                                    <label class="form-check-label" for="missenseTypeCheck">Missense Rate</label>
+                                </div>
+                            </td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <div class="form-check form-check-inline" data-toggle="tooltip"
+                                     title="Include in calculation?">
+                                    <input class="form-check-input mutation-type-check" type="checkbox"
+                                           id="nonsenseTypeCheck" value="Nonsense">
+                                    <label class="form-check-label" for="nonsenseTypeCheck">Nonsense Rate</label>
+                                </div>
+                            </td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
+                        </tr>
+                        <tr>
+                            <td class="align-middle">
+                                <div class="form-check form-check-inline" data-toggle="tooltip"
+                                     title="Include in calculation?">
+                                    <input class="form-check-input mutation-type-check" type="checkbox"
+                                           id="synonymousTypeCheck" value="Synonymous">
+                                    <label class="form-check-label" for="synonymousTypeCheck">Synonymous Rate</label>
+                                </div>
+                            </td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
+                            <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row float-right">
+                    <button class="btn btn-success" id="calculateButton">Calculate</button>
                 </div>
             </div>
 
-            <div class="form-group row collapse" id="generationsPerYearCollapse">
-                <label class="col-form-label col-sm-3">Generations per year</label>
-                <input type="text" class="form-control col-sm-9" id="generationsPerYear">
+            <div class="list-group-item collapse" id="resultsCardBody">
             </div>
-
-            <div class="form-group row">
-                <label for="codonModelSelect" class="col-form-label col-sm-3">Codon Table</label>
-                <select class="form-control col-sm-9" id="codonModelSelect"></select>
-            </div>
-
-            <div class="row">
-                <table class="table table-bordered">
-                    <thead>
-                    <tr>
-                        <th>
-                            <button class="btn btn-info btn-sm" data-toggle="collapse"
-                                    data-target=".advanced-codon-position-row" id="advancedCodonButton">
-                            <span data-toggle="tooltip"
-                                  title="Customize per-position mutation probabilities">Advanced</span>
-                            </button>
-                        </th>
-                        <th scope="col">Codon Position 1</th>
-                        <th scope="col">Codon Position 2</th>
-                        <th scope="col">Codon Position 3</th>
-
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <th scope="row" class="align-middle">Fraction of Required Mutations</th>
-                        <td><input type="text" class="form-control codon-rate codon-rate-total" size="5" readonly></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-total" size="5" readonly></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-total" size="5" readonly></td>
-                    </tr>
-                    <tr class="collapse advanced-codon-position-row">
-                        <td class="align-middle">
-                            <div class="form-check form-check-inline" data-toggle="tooltip"
-                                 title="Include in calculation?">
-                                <input class="form-check-input mutation-type-check" type="checkbox"
-                                       id="missenseTypeCheck">
-                                <label class="form-check-label" for="missenseTypeCheck">Missense Rate</label>
-                            </div>
-                        </td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
-                    </tr>
-                    <tr class="collapse advanced-codon-position-row">
-                        <td class="align-middle">
-                            <div class="form-check form-check-inline" data-toggle="tooltip"
-                                 title="Include in calculation?">
-                                <input class="form-check-input mutation-type-check" type="checkbox"
-                                       id="nonsenseTypeCheck">
-                                <label class="form-check-label" for="nonsenseTypeCheck">Nonsense Rate</label>
-                            </div>
-                        </td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
-                    </tr>
-                    <tr class="collapse advanced-codon-position-row">
-                        <td class="align-middle">
-                            <div class="form-check form-check-inline" data-toggle="tooltip"
-                                 title="Include in calculation?">
-                                <input class="form-check-input mutation-type-check" type="checkbox"
-                                       id="synonymousTypeCheck">
-                                <label class="form-check-label" for="synonymousTypeCheck">Synonymous Rate</label>
-                            </div>
-                        </td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
-                        <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
         </div>
+
     </div>
 
 </div>
