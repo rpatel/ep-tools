@@ -8,15 +8,30 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+            crossorigin="anonymous"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"
+            integrity="sha256-/GKyJ0BQJD8c8UYgf7ziBrs/QgcikS7Fv/SaArgBcEI=" crossorigin="anonymous"></script>
+
+    <script src="js/codon-tables.js"></script>
+    <script src="js/ets-calculator.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+            integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
 </head>
 
 <body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Evolutionary Probability</a>
+    <a class="navbar-brand" href="#">Time Span Calculator</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -31,35 +46,107 @@
 </nav>
 
 <div class="container my-2">
-
     <div class="card">
         <div class="card-header">
             <h6 class="mb-0">
                 Mutation Model
             </h6>
         </div>
-        <div class="card-body">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <label class="input-group-text" for="codonModelSelect">Codon Table</label>
+        <div class="card-body collapse" id="mutationModelCardBody">
+            <div class="form-group row">
+                <label for="perSiteMutationRateInput" class="col-form-label col-sm-3">Point Mutation Rate</label>
+                <div class="input-group col-sm-9 px-0">
+                    <input type="text" class="form-control" id="perSiteMutationRateInput"
+                           placeholder="e.g., 0.00314, 2.5e-9">
+                    <select class="form-control" id="mutationRateUnitSelect" style="max-width: 250px;">
+                        <option value="perYear">mutations / bp/ year</option>
+                        <option value="perGeneration">mutations / bp/ generation
+                        </option>
+                    </select>
                 </div>
-                <select class="custom-select" id="codonModelSelect"></select>
             </div>
+
+            <div class="form-group row collapse" id="generationsPerYearCollapse">
+                <label class="col-form-label col-sm-3">Generations per year</label>
+                <input type="text" class="form-control col-sm-9" id="generationsPerYear">
+            </div>
+
+            <div class="form-group row">
+                <label for="codonModelSelect" class="col-form-label col-sm-3">Codon Table</label>
+                <select class="form-control col-sm-9" id="codonModelSelect"></select>
+            </div>
+
+            <div class="row">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>
+                            <button class="btn btn-info btn-sm" data-toggle="collapse"
+                                    data-target=".advanced-codon-position-row" id="advancedCodonButton">
+                            <span data-toggle="tooltip"
+                                  title="Customize per-position mutation probabilities">Advanced</span>
+                            </button>
+                        </th>
+                        <th scope="col">Codon Position 1</th>
+                        <th scope="col">Codon Position 2</th>
+                        <th scope="col">Codon Position 3</th>
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th scope="row" class="align-middle">Fraction of Required Mutations</th>
+                        <td><input type="text" class="form-control codon-rate codon-rate-total" size="5" readonly></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-total" size="5" readonly></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-total" size="5" readonly></td>
+                    </tr>
+                    <tr class="collapse advanced-codon-position-row">
+                        <td class="align-middle">
+                            <div class="form-check form-check-inline" data-toggle="tooltip"
+                                 title="Include in calculation?">
+                                <input class="form-check-input mutation-type-check" type="checkbox"
+                                       id="missenseTypeCheck">
+                                <label class="form-check-label" for="missenseTypeCheck">Missense Rate</label>
+                            </div>
+                        </td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-missense" size="5"></td>
+                    </tr>
+                    <tr class="collapse advanced-codon-position-row">
+                        <td class="align-middle">
+                            <div class="form-check form-check-inline" data-toggle="tooltip"
+                                 title="Include in calculation?">
+                                <input class="form-check-input mutation-type-check" type="checkbox"
+                                       id="nonsenseTypeCheck">
+                                <label class="form-check-label" for="nonsenseTypeCheck">Nonsense Rate</label>
+                            </div>
+                        </td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-nonsense" size="5"></td>
+                    </tr>
+                    <tr class="collapse advanced-codon-position-row">
+                        <td class="align-middle">
+                            <div class="form-check form-check-inline" data-toggle="tooltip"
+                                 title="Include in calculation?">
+                                <input class="form-check-input mutation-type-check" type="checkbox"
+                                       id="synonymousTypeCheck">
+                                <label class="form-check-label" for="synonymousTypeCheck">Synonymous Rate</label>
+                            </div>
+                        </td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
+                        <td><input type="text" class="form-control codon-rate codon-rate-synonymous" size="5"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 
 </div>
-
-
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-        crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
-        integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
-        crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
-        integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
-        crossorigin="anonymous"></script>
 
 </body>
 
