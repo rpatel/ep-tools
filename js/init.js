@@ -5,16 +5,13 @@ $(function () {
     let MUTATION_RATE_PER_SITE_PER_YEAR;
     let GENERATIONS_PER_YEAR = 1;
 
-    // DEBUG
-    $('.advanced-codon-position-row').collapse('toggle');
-    $('#resultsCardBody').collapse('toggle');
-    $('#perSiteMutationRateText').val('2e-9');
-
     //// Initialize
     // Bootstrap requirements, e.g. tooltips
-    $(function () {
+    function initializeTooltips() {
         $('[data-toggle="tooltip"]').tooltip({'trigger': 'hover'})
-    })
+    }
+
+    initializeTooltips();
 
     // Load codon tables
     let sortedCodonArray = _.sortBy(codonTableData, ['table_id', 'table_name']);
@@ -76,6 +73,43 @@ $(function () {
     $('#missenseTypeCheck').prop('checked', true).change();
     $('#requiredMutationsText').val(20);
 
+    // Tree check file upload
+    $('#treeCheckFile').change(function (event) {
+        $('#treeCheckFileLabel').text(event.target.files[0].name);
+        $('#treeCheckSubmit').collapse('show');
+    });
+
+    // Submit tree check
+    $('#treeCheckSubmit').click((event) => {
+        event.preventDefault();
+
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            let newickString = e.target.result;
+            window.newickTree = Newick.parse(newickString);
+
+            var sumSubTree = function (subTree, curSum) {
+                _.each(subTree, (branch) => {
+                    _.forOwn(branch, (v, k) => {
+                        if (k === 'branchset')
+                            sumSubTree(branch[k], curSum);
+                        else if (k === 'length') {
+                            console.log(curSum);
+                            curSum += v;
+                        };
+
+                    })
+                });
+                return curSum;
+            };
+
+            console.log(sumSubTree([newickTree,], 0));
+
+        };
+        reader.readAsText($('#treeCheckFile').get(0).files[0]);
+
+    });
+
     //// Finally
     // Show mutation model card body
     $('#mutationModelCardBody').collapse('show');
@@ -131,6 +165,12 @@ $(function () {
             arr.slice(-2).join(' ' + conj + ' ');
     }
 
+    let checkYourTreeString = `
+        <button class="btn btn-outline-info" data-toggle="modal" data-target="#treeCheckModal">
+            <span data-toggle="tooltip" data-placement="right" title="Does your tree have sufficient time span?">Check your tree</span>
+        </button>
+    `;
+
     function runCalculation() {
         // Do validation in here at some point.
         let requiredChanges = Number($('#requiredMutationsText').val());
@@ -144,17 +184,25 @@ $(function () {
             codonPositionMutationProbs
         );
 
-        let resultString =
-            'For <b>' + Number(requiredChanges) + ' ' + $('#mutationTypesText').text().toLowerCase() + '</b> mutations to have occurred' +
-            ' at a amino acid position with a mutation rate of <b' +
-            ($('#mutationRateUnitSelect').val() === "perGeneration" ? ' title="' + $('#generationsPerYearText').val()  + ' generation(s) / year"' : '') + '>' +
-            $('#perSiteMutationRateText').val() + ' ' + $('#mutationRateUnitSelect option:selected').text() + '</b>' +
-            ' using a "<b>' + $('#codonModelSelect option:selected').text() + '" codon table</b>' +
-            ', the total time span of the tree would need to be &ge; <b class="text-primary" title="' + requiredTime + '">' +
-            numeral(requiredTime).format('0.0[00]a') + 'yrs</b>.';
+        let resultString = `<p>
+            For <b>${requiredChanges} ${$('#mutationTypesText').text().toLowerCase()}</b> mutations to have occured at an amino acid position, 
+            with a mutation rate of 
+            <b ${$('#mutationRateUnitSelect').val() === "perGeneration" ? ' data-toggle="tooltip" title="' + $('#generationsPerYearText').val() + ' generation(s) / year"' : ''}>
+            ${$('#perSiteMutationRateText').val()} ${$('#mutationRateUnitSelect option:selected').text()}</b> using a 
+            <b>"${$('#codonModelSelect option:selected').text()}" codon table</b>, the total time span of the tree would 
+            need to be &ge; <b class="text-primary" data-toggle="tooltip" title="${numeral(requiredTime).format(',.[000]')} years">${numeral(requiredTime).format('0.0[00]a')}yrs</b>.
+        </p>`;
 
-        $('#resultsCardBody').empty().append($('<p>').html(resultString));
+        $('#resultsCardBody').empty().append($('<p>').html(resultString))//.append(checkYourTreeString);
+        initializeTooltips();
+        $('#resultsCardBody').collapse('show');
     }
 
+    // DEBUG
+    // $('.advanced-codon-position-row').collapse('toggle');
+    // $('#resultsCardBody').collapse('toggle');
+    $('#perSiteMutationRateText').val('2e-9');
+    // $('#calculateButton').click();
+    // $('#treeCheckModal').modal('show');
 
 });
