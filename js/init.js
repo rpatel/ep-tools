@@ -8,7 +8,7 @@ $(function () {
     //// Initialize
     // Bootstrap requirements, e.g. tooltips
     function initializeTooltips() {
-        $('[data-toggle="tooltip"]').tooltip({'trigger': 'hover'})
+        $('[data-toggle="tooltip"]').tooltip({'trigger': 'hover', 'container':'body'})
     }
 
     initializeTooltips();
@@ -134,6 +134,8 @@ $(function () {
                 pos_sum += Number(synonymousRates[pos].value);
 
             totalRates[pos].value = _.round(pos_sum, 3);
+            totalRates[pos].parentElement.setAttribute('data-original-title', `${numeral(totalRates[pos].value).format('0.0[00]%')} of mutations in codon position ${pos+1} will lead to the expected change(s).`);
+            // initializeTooltips();
         }
     }
 
