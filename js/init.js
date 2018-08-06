@@ -201,7 +201,7 @@ $(function () {
     // DEBUG
     // $('.advanced-codon-position-row').collapse('toggle');
     // $('#resultsCardBody').collapse('toggle');
-    $('#perSiteMutationRateText').val('2e-9');
+    // $('#perSiteMutationRateText').val('2e-9');
     // $('#calculateButton').click();
     // $('#treeCheckModal').modal('show');
 
