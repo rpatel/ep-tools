@@ -1,6 +1,6 @@
 $(function () {
 
-    if (document.location.hostname === 'rpatel.github.com') {
+    if (document.location.hostname === 'rpatel.github.io') {
         console.log('Adding analytics script.');
         $('body').append(`
         <!-- Matomo -->
