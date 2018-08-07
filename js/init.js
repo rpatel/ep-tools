@@ -1,5 +1,28 @@
 $(function () {
 
+    if (document.location.hostname === 'rpatel.github.com') {
+        console.log('Adding analytics script.');
+        $('body').append(`
+        <!-- Matomo -->
+        <script type="text/javascript">
+            var _paq = _paq || [];
+            /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+            _paq.push(['trackPageView']);
+            _paq.push(['enableLinkTracking']);
+            (function() {
+                var u="//analytics.ravipatel.org/";
+                _paq.push(['setTrackerUrl', u+'piwik.php']);
+                _paq.push(['setSiteId', '2']);
+                var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+            })();
+        </script>
+        <!-- End Matomo Code -->
+        `);
+    } else {
+        console.log('Skipping analytics script.');
+    }
+
     // Declare important variables for calculation
     let REQUIRED_CHANGES;
     let MUTATION_RATE_PER_SITE_PER_YEAR;
@@ -8,7 +31,7 @@ $(function () {
     //// Initialize
     // Bootstrap requirements, e.g. tooltips
     function initializeTooltips() {
-        $('[data-toggle="tooltip"]').tooltip({'trigger': 'hover', 'container':'body'})
+        $('[data-toggle="tooltip"]').tooltip({'trigger': 'hover', 'container': 'body'})
     }
 
     initializeTooltips();
@@ -96,7 +119,8 @@ $(function () {
                         else if (k === 'length') {
                             console.log(curSum);
                             curSum += v;
-                        };
+                        }
+                        ;
 
                     })
                 });
@@ -134,7 +158,7 @@ $(function () {
                 pos_sum += Number(synonymousRates[pos].value);
 
             totalRates[pos].value = _.round(pos_sum, 3);
-            totalRates[pos].parentElement.setAttribute('data-original-title', `${numeral(totalRates[pos].value).format('0.0[00]%')} of mutations in codon position ${pos+1} will lead to the expected change(s).`);
+            totalRates[pos].parentElement.setAttribute('data-original-title', `${numeral(totalRates[pos].value).format('0.0[00]%')} of mutations in codon position ${pos + 1} will lead to the expected change(s).`);
             // initializeTooltips();
         }
     }
