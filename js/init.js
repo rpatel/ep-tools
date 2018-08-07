@@ -11,10 +11,10 @@ $(function () {
             _paq.push(['enableLinkTracking']);
             (function() {
                 var u="//analytics.ravipatel.org/";
-                _paq.push(['setTrackerUrl', u+'piwik.php']);
+                _paq.push(['setTrackerUrl', u+'p']);
                 _paq.push(['setSiteId', '2']);
                 var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-                g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+                g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'j'; s.parentNode.insertBefore(g,s);
             })();
         </script>
         <!-- End Matomo Code -->
