@@ -1,2 +1,5 @@
+## Ignore IDE files
 .idea
 
+## Let npm resolve dependencies as needed
+node_modules
