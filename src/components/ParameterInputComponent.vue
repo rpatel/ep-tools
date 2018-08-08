@@ -8,10 +8,12 @@
                           label="Desired number of mutations"
                           label-for="inputDesiredMutations">
                 <b-form-input id="inputDesiredMutations"
-                              v-model="desiredMutations"
-                              type="number"
+                              v-model.number="$v.desiredMutations.$model"
                               placeholder=">0"
-                              min="0"/>
+                              min="0"
+                              :state="($v.desiredMutations.$invalid && $v.desiredMutations.$dirty) ? false : null"/>
+                <b-form-invalid-feedback>Must be a number >0</b-form-invalid-feedback>
+
             </b-form-group>
 
             <b-form-group id="formGroupMutationRate"
@@ -22,13 +24,16 @@
                           label-for="inputMutationRate">
                 <b-input-group>
                     <b-form-input id="inputMutationRate"
-                                  v-model="mutationRate"
-                                  type="number"
-                                  placeholder="e.g., 2.5e-9, 0.0000314"/>
-                    <b-form-select v-model="isRatePerGeneration" style="max-width: 250px">
+                                  v-model.number="$v.mutationRate.$model"
+                                  placeholder="e.g., 2.5e-9, 0.0000314"
+                                  :state="($v.mutationRate.$invalid && $v.mutationRate.$dirty) ? false : null"/>
+                    <b-form-select v-model="isRatePerGeneration" style="max-width: 250px"
+                                   @change="!isRatePerGeneration ? $v.generationsPerYear.$reset() : null">
                         <option :value="false">mutations / bp / year</option>
                         <option :value="true">mutations / bp / generation</option>
                     </b-form-select>
+                    <b-form-invalid-feedback>Must be number >0</b-form-invalid-feedback>
+
                 </b-input-group>
             </b-form-group>
 
@@ -40,8 +45,9 @@
                               label="Generations / year"
                               label-for="inputGenerationsPerYear">
                     <b-form-input id="inputGenerationsPerYear"
-                                  v-model="generationsPerYear"
-                                  type="number"/>
+                                  v-model="$v.generationsPerYear.$model"
+                                  :state="($v.generationsPerYear.$invalid && $v.generationsPerYear.$dirty) ? false : null"/>
+                    <b-form-invalid-feedback>Must be number >0</b-form-invalid-feedback>
                 </b-form-group>
             </b-collapse>
 
@@ -80,11 +86,14 @@
                             <small>{{mutationTypesString}}</small>
                         </th>
                         <td v-for="codonPosition in [0,1,2]">
-                            <b-form-input v-model="totalRates[codonPosition]"
+                            <b-form-input v-model="$v.totalRates.$model[codonPosition]"
                                           v-b-tooltip.hover
                                           :title="totalRates[codonPosition] !== '--' ? numeral(totalRates[codonPosition]).format('0.[000]%') : ''"
-                                          readonly/>
+                                          readonly
+                                          :state="$v.totalRates.$each[codonPosition].$invalid ? false : null"/>
+                            <b-form-invalid-feedback>Must be between 0 and 1.</b-form-invalid-feedback>
                         </td>
+
                     </tr>
                     </tbody>
                     <tbody v-show="showAdvanced">
@@ -97,24 +106,39 @@
                         </td>
                         <td v-for="codonPosition in [0,1,2]">
                             <b-form-input
-                                    type="number"
+                                    type="text"
                                     min="0"
-                                    v-model="$data[mutationType + 'RatePerPosition'][codonPosition]"/>
+                                    v-model.number="$v[mutationType+'RatePerPosition'].$model[codonPosition]"
+                                    @change="codonTableIndex='custom'"
+                                    :state="($v[mutationType+'RatePerPosition'].$each[codonPosition].$invalid || false) ? false : null"/>
+                            <b-form-invalid-feedback>Must be between 0 and 1.</b-form-invalid-feedback>
                         </td>
                     </tr>
                     </tbody>
                 </table>
             </b-row>
+            <div class="row float-right">
+                <span v-b-tooltip.hover
+                      :disabled="!$v.$invalid"
+                      title="Please check that all parameter values are valid.">
+                <b-button :variant="$v.$invalid ? 'outline-success' : 'success'"
+                          @click="() => $v.$invalid ? $v.$touch() : null">Calculate
+                </b-button>
+                </span>
+            </div>
         </b-list-group-item>
     </b-collapse>
 </template>
 
 <script>
     import {debounce, forEach, range, round, sortBy} from 'lodash';
+    import numeral from 'numeral';
+
+    import {validationMixin} from 'vuelidate';
+    import {between, decimal, required} from 'vuelidate/lib/validators';
 
     import {CodonTablesData} from '../data/codon-tables-data';
 
-    const numeral = require('numeral');
 
     export default {
         data: function () {
@@ -141,13 +165,57 @@
             }
         },
 
+        mixins: [validationMixin],
+
+        validations() {
+            let validations = {
+                desiredMutations: {
+                    required,
+                    decimal,
+                    greaterThan: (value) => value > 0
+                },
+                mutationRate: {
+                    required,
+                    greaterThan: (value) => value > 0
+                },
+                totalRates: {
+                    $each: {
+                        between: between(0, 1)
+                    }
+                },
+            };
+
+            if (this.isRatePerGeneration)
+                validations.generationsPerYear = {
+                    required,
+                    greaterThan: (value) => value > 0
+                };
+            else
+                validations.generationsPerYear = {blank: () => true};
+
+            ['missense', 'nonsense', 'synonymous'].forEach(function (mutationType) {
+                if (this[mutationType + 'Checked'])
+                    validations[mutationType + 'RatePerPosition'] = {
+                        $each: {
+                            required,
+                            decimal,
+                            between: between(0, 1)
+                        }
+                    };
+                else
+                    validations[mutationType + 'RatePerPosition'] = {$each: {blank: () => true}};
+            }.bind(this));
+
+            return validations;
+        },
+
         computed: {
             mutationTypesString: function () {
                 let mutationTypes = [
                     this.missenseChecked ? 'Missense' : null,
                     this.nonsenseChecked ? 'Nonsense' : null,
                     this.synonymousChecked ? 'Synonymous' : null
-                ].filter(mutationType => mutationType !== null)
+                ].filter(mutationType => mutationType !== null);
 
                 return mutationTypes.slice(0, -2).join(', ') +
                     (mutationTypes.slice(0, -2).length ? ', ' : '') +
@@ -157,7 +225,9 @@
 
         watch: {
             codonTableIndex: function (newCodonTableIndex, oldCodonTableIndex) {
-                console.log('codonTableIndex changed');
+                if (this.codonTableIndex === 'custom')
+                    return;
+
                 let codonTable = this.sortedCodonArray[newCodonTableIndex];
 
                 this.missenseRatePerPosition = codonTable.rates.missense
@@ -199,19 +269,17 @@
                 });
 
                 this.codonTableIndex = 0;
-                this.doneLoading = true;
-            },
+                this.calculateTotalRate();
 
-            populationPerPositionMutationRates: function () {
-
+                setTimeout(() => {
+                    this.doneLoading = true
+                }, 500);
             },
 
             calculateTotalRate: function () {
-                console.log('Calculating total rate.');
                 let totalRates = [];
                 try {
                     forEach(range(3), (codonPosition) => {
-                        console.log(codonPosition);
                         let sum = 0;
                         if (this.missenseChecked)
                             sum += this.missenseRatePerPosition[codonPosition];
@@ -225,13 +293,13 @@
                     totalRates = ['--', '--', '--'];
                 }
                 this.totalRates = totalRates;
-            }
+            },
         }
         ,
 
         created: function () {
             // Set default values (e.g. if debug)
-            // this.desiredMutations = 20;
+            this.desiredMutations = 20;
             // this.mutationRate = '2e-9';
             //
 
@@ -241,8 +309,9 @@
 
             this.sortedCodonArray = sortBy(CodonTablesData, ['table_id', 'table_name']);
 
-            setTimeout(this.loadCodonTables, 1000)
-        },
+            this.loadCodonTables();
+        }
+        ,
 
         filters: {
             capitalize: function (value) {
