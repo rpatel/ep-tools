@@ -7,6 +7,7 @@
                 <results-output-component :resultsReady="resultsReady" :results="results"/>
             </b-list-group>
         </b-card>
+
     </b-container>
 </template>
 
