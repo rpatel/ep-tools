@@ -1,132 +1,130 @@
 <template>
-    <b-collapse v-model="doneLoading" id="collapseParameters">
-        <b-list-group-item>
-            <b-form-group id="formGroupDesiredMutations"
-                          horizontal
-                          :label-cols="3"
-                          breakpoint="md"
-                          label="Desired number of mutations"
-                          label-for="inputDesiredMutations">
-                <b-form-input id="inputDesiredMutations"
-                              v-model.number="$v.desiredMutations.$model"
-                              placeholder=">0"
-                              min="0"
-                              :state="($v.desiredMutations.$invalid && $v.desiredMutations.$dirty) ? false : null"/>
-                <b-form-invalid-feedback>Must be a number >0</b-form-invalid-feedback>
+    <b-collapse class="list-group-item" v-model="doneLoading" id="collapseParameters">
+        <b-form-group id="formGroupDesiredMutations"
+                      horizontal
+                      :label-cols="3"
+                      breakpoint="md"
+                      label="Desired number of mutations"
+                      label-for="inputDesiredMutations">
+            <b-form-input id="inputDesiredMutations"
+                          v-model.number="$v.desiredMutations.$model"
+                          placeholder=">0"
+                          min="0"
+                          :state="($v.desiredMutations.$invalid && $v.desiredMutations.$dirty) ? false : null"/>
+            <b-form-invalid-feedback>Must be a number >0</b-form-invalid-feedback>
 
-            </b-form-group>
+        </b-form-group>
 
-            <b-form-group id="formGroupMutationRate"
-                          horizontal
-                          :label-cols="3"
-                          breakpoint="md"
-                          label="Point Mutation Rate"
-                          label-for="inputMutationRate">
-                <b-input-group>
-                    <b-form-input id="inputMutationRate"
-                                  v-model.number="$v.mutationRate.$model"
-                                  placeholder="e.g., 2.5e-9, 0.0000314"
-                                  :state="($v.mutationRate.$invalid && $v.mutationRate.$dirty) ? false : null"/>
-                    <b-form-select v-model="isRatePerGeneration" style="max-width: 250px"
-                                   @change="!isRatePerGeneration ? $v.generationsPerYear.$reset() : null">
-                        <option :value="false">mutations / bp / year</option>
-                        <option :value="true">mutations / bp / generation</option>
-                    </b-form-select>
-                    <b-form-invalid-feedback>Must be number >0</b-form-invalid-feedback>
-
-                </b-input-group>
-            </b-form-group>
-
-            <b-collapse v-model="isRatePerGeneration" id="collapseGenerationsPerYear">
-                <b-form-group id="formGroupGenerationsPerYear"
-                              horizontal
-                              :label-cols="3"
-                              breakpoint="md"
-                              label="Generations / year"
-                              label-for="inputGenerationsPerYear">
-                    <b-form-input id="inputGenerationsPerYear"
-                                  v-model="$v.generationsPerYear.$model"
-                                  :state="($v.generationsPerYear.$invalid && $v.generationsPerYear.$dirty) ? false : null"/>
-                    <b-form-invalid-feedback>Must be number >0</b-form-invalid-feedback>
-                </b-form-group>
-            </b-collapse>
-
-            <b-form-group id="formGroupGeneticCode"
-                          horizontal
-                          :label-cols="3"
-                          breakpoint="md"
-                          label="Genetic Code"
-                          label-form="selectGeneticCode">
-                <b-form-select v-model="codonTableIndex" :options="codonTableOptions">
-                    <option value="custom">Custom</option>
+        <b-form-group id="formGroupMutationRate"
+                      horizontal
+                      :label-cols="3"
+                      breakpoint="md"
+                      label="Point Mutation Rate"
+                      label-for="inputMutationRate">
+            <b-input-group>
+                <b-form-input id="inputMutationRate"
+                              v-model.number="$v.mutationRate.$model"
+                              placeholder="e.g., 2.5e-9, 0.0000314"
+                              :state="($v.mutationRate.$invalid && $v.mutationRate.$dirty) ? false : null"/>
+                <b-form-select v-model="isRatePerGeneration" style="max-width: 250px"
+                               @change="!isRatePerGeneration ? $v.generationsPerYear.$reset() : null">
+                    <option :value="false">mutations / bp / year</option>
+                    <option :value="true">mutations / bp / generation</option>
                 </b-form-select>
+                <b-form-invalid-feedback>Must be number >0</b-form-invalid-feedback>
+
+            </b-input-group>
+        </b-form-group>
+
+        <b-collapse v-model="isRatePerGeneration" id="collapseGenerationsPerYear">
+            <b-form-group id="formGroupGenerationsPerYear"
+                          horizontal
+                          :label-cols="3"
+                          breakpoint="md"
+                          label="Generations / year"
+                          label-for="inputGenerationsPerYear">
+                <b-form-input id="inputGenerationsPerYear"
+                              v-model="$v.generationsPerYear.$model"
+                              :state="($v.generationsPerYear.$invalid && $v.generationsPerYear.$dirty) ? false : null"/>
+                <b-form-invalid-feedback>Must be number >0</b-form-invalid-feedback>
             </b-form-group>
+        </b-collapse>
 
-            <b-row class="table-responsive-md mx-0 px-0">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>
-                            <b-button size="sm" variant="outline-warning"
+        <b-form-group id="formGroupGeneticCode"
+                      horizontal
+                      :label-cols="3"
+                      breakpoint="md"
+                      label="Genetic Code"
+                      label-form="selectGeneticCode">
+            <b-form-select v-model="codonTableIndex" :options="codonTableOptions">
+                <option value="custom">Custom</option>
+            </b-form-select>
+        </b-form-group>
+
+        <b-row class="table-responsive-md mx-0 px-0">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>
+                        <b-button size="sm" variant="outline-warning"
+                                  v-b-tooltip.hover
+                                  title="Customize per-site mutation probabilities"
+                                  @click="showAdvanced = !showAdvanced">
+                            Advanced
+                        </b-button>
+                    </th>
+                    <th scope="col">Codon Position 1</th>
+                    <th scope="col">Codon Position 2</th>
+                    <th scope="col">Codon Position 3</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th scope="row" class="align-middle">
+                        Fraction of Expected Mutations<br/>
+                        <small>{{mutationTypesString}}</small>
+                    </th>
+                    <td v-for="codonPosition in [0,1,2]">
+                        <b-form-input v-model="$v.totalRates.$model[codonPosition]"
                                       v-b-tooltip.hover
-                                      title="Customize per-site mutation probabilities"
-                                      @click="showAdvanced = !showAdvanced">
-                                Advanced
-                            </b-button>
-                        </th>
-                        <th scope="col">Codon Position 1</th>
-                        <th scope="col">Codon Position 2</th>
-                        <th scope="col">Codon Position 3</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <th scope="row" class="align-middle">
-                            Fraction of Expected Mutations<br/>
-                            <small>{{mutationTypesString}}</small>
-                        </th>
-                        <td v-for="codonPosition in [0,1,2]">
-                            <b-form-input v-model="$v.totalRates.$model[codonPosition]"
-                                          v-b-tooltip.hover
-                                          :title="totalRates[codonPosition] !== '--' ? numeral(totalRates[codonPosition]).format('0.[000]%') : ''"
-                                          readonly
-                                          :state="$v.totalRates.$each[codonPosition].$invalid ? false : null"/>
-                            <b-form-invalid-feedback>Must be between 0 and 1.</b-form-invalid-feedback>
-                        </td>
+                                      :title="totalRateTooltip(codonPosition)"
+                                      readonly
+                                      :state="$v.totalRates.$each[codonPosition].$invalid ? false : null"/>
+                        <b-form-invalid-feedback>Must be between 0 and 1.</b-form-invalid-feedback>
+                    </td>
 
-                    </tr>
-                    </tbody>
-                    <tbody v-show="showAdvanced">
-                    <tr v-for="mutationType in ['missense', 'nonsense', 'synonymous']">
-                        <td class="align-middle">
-                            <b-form-checkbox
-                                    v-model="$data[mutationType + 'Checked']">
-                                {{mutationType | capitalize}} Rate
-                            </b-form-checkbox>
-                        </td>
-                        <td v-for="codonPosition in [0,1,2]">
-                            <b-form-input
-                                    type="text"
-                                    min="0"
-                                    v-model.number="$v[mutationType+'RatePerPosition'].$model[codonPosition]"
-                                    @change="codonTableIndex='custom'"
-                                    :state="($v[mutationType+'RatePerPosition'].$each[codonPosition].$invalid || false) ? false : null"/>
-                            <b-form-invalid-feedback>Must be between 0 and 1.</b-form-invalid-feedback>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </b-row>
-            <div class="row float-right">
+                </tr>
+                </tbody>
+                <tbody v-show="showAdvanced">
+                <tr v-for="mutationType in ['missense', 'nonsense', 'synonymous']">
+                    <td class="align-middle">
+                        <b-form-checkbox
+                                v-model="$data[mutationType + 'Checked']">
+                            {{mutationType | capitalize}} Rate
+                        </b-form-checkbox>
+                    </td>
+                    <td v-for="codonPosition in [0,1,2]">
+                        <b-form-input
+                                type="text"
+                                min="0"
+                                v-model.number="$v[mutationType+'RatePerPosition'].$model[codonPosition]"
+                                @change="codonTableIndex='custom'"
+                                :state="($v[mutationType+'RatePerPosition'].$each[codonPosition].$invalid || false) ? false : null"/>
+                        <b-form-invalid-feedback>Must be between 0 and 1.</b-form-invalid-feedback>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </b-row>
+        <div class="row float-right ">
                 <span v-b-tooltip.hover
                       :disabled="!$v.$invalid"
                       title="Please check that all parameter values are valid.">
                 <b-button :variant="$v.$invalid ? 'outline-success' : 'success'"
-                          @click="() => $v.$invalid ? $v.$touch() : null">Calculate
+                          @click="() => $v.$invalid ? $v.$touch() : calculateResults()">Calculate
                 </b-button>
                 </span>
-            </div>
-        </b-list-group-item>
+        </div>
     </b-collapse>
 </template>
 
@@ -147,7 +145,7 @@
                 showAdvanced: false,
 
                 isRatePerGeneration: false,
-                desiredMutations: null,
+                desiredMutations: 20,
                 mutationRate: null,
                 generationsPerYear: 1,
 
@@ -294,21 +292,47 @@
                 }
                 this.totalRates = totalRates;
             },
-        }
-        ,
+
+            calculateResults: function () {
+                let mutationRatePerSiteYear = this.mutationRate * (this.isRatePerGeneration ? this.generationsPerYear : 1)
+                let mutationProbability = 1 - Math.exp(-1 * mutationRatePerSiteYear);
+
+                let prNoExpected = 1
+                forEach(range(3), (codonPosition) => {
+                    prNoExpected *= (1 - mutationProbability) +
+                        (mutationProbability * (1 - this.totalRates[codonPosition]))
+                });
+
+                let prAtleastOneExpected = 1 - prNoExpected;
+                let requiredTime = this.desiredMutations / prAtleastOneExpected;
+
+                this.presentResults(requiredTime);
+            },
+
+            presentResults: function (_requiredTime) {
+                this.$emit('result-ready', {
+                    desiredMutations: this.desiredMutations,
+                    mutationRate: this.mutationRate,
+                    generationsPerYear: this.isRatePerGeneration ? this.generationsPerYear : null,
+                    codonTableName: this.codonTableOptions[this.codonTableIndex].text,
+                    requiredTime: _requiredTime,
+                    mutationTypesString: this.mutationTypesString
+                });
+            },
+
+            totalRateTooltip: function (codonPosition) {
+                if (this.totalRates[codonPosition] == '--')
+                    return '';
+                return `${numeral(this.totalRates[codonPosition]).format('0.[0]%')} of mutations in codon position ${codonPosition + 1} will result in a ${this.mutationTypesString.toLowerCase()} mutation.`;
+            }
+        },
 
         created: function () {
-            // Set default values (e.g. if debug)
-            this.desiredMutations = 20;
-            // this.mutationRate = '2e-9';
-            //
-
             this.numeral = numeral;
 
             this.debounceCalculateTotalRate = debounce(this.calculateTotalRate, 500);
 
             this.sortedCodonArray = sortBy(CodonTablesData, ['table_id', 'table_name']);
-
             this.loadCodonTables();
         }
         ,
